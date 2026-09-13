@@ -187,7 +187,13 @@ function renderResults(data) {
   const verdictExplanation = document.getElementById("verdict-explanation");
   if (verdictExplanation) {
     const verdictLabel = classification === "LIKELY REAL BUSINESS" ? "Professional website" : (classification === "LIKELY DEMO / DUMMY" ? "Dummy or unfinished website" : "Partially professional, but verification required");
-    const reasons = [...(data.warnings || []), ...(data.signals || [])].slice(0, 6);
+    const platform = data.technology && data.technology.hosting;
+    const platformReason = platform && platform !== "Standard Web Hosting"
+      ? `Hosting detected: ${platform}. Hosting platform alone does not prove a website is dummy or genuine.`
+      : null;
+    const reasons = [platformReason, ...(data.warnings || []), ...(data.signals || [])]
+      .filter(Boolean)
+      .slice(0, 6);
     const reasonText = reasons.length > 0
       ? reasons.map(reason => `- ${reason}`).join("\n")
       : "- No detailed signals were returned by the scan.";

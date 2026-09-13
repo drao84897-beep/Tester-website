@@ -223,12 +223,17 @@ def calculate_authenticity_score(
     # 8. Technology Stack Consistency (up to +5 pts)
     tech_points = 5
     tech_list = tech_data.get("technologies", [])
+    hosting_platform = tech_data.get("hosting", "Standard Web Hosting")
+    if hosting_platform != "Standard Web Hosting":
+        signals.append(
+            f"Hosting platform detected: {hosting_platform}; platform hosting alone does not indicate a dummy website"
+        )
     breakdown.append({
         "category": "Technology Consistency",
         "points": tech_points,
         "max_points": 5,
         "status": "PASS",
-        "detail": f"{len(tech_list)} components detected ({', '.join(tech_list[:4])})"
+        "detail": f"{len(tech_list)} components detected ({', '.join(tech_list[:4])}); hosting: {hosting_platform}"
     })
     score += tech_points
 
