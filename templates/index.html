@@ -3,19 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="WebVerify AI analyzes website security, domain history, content, contacts, hosting, and dummy signals to provide an explainable authenticity assessment.">
+  <meta name="theme-color" content="#0b0f19">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="WebVerify AI - Website Authenticity Analyzer">
+  <meta property="og:description" content="Analyze public website signals and understand whether a site appears professional, unfinished, or needs verification.">
+  <meta property="og:url" content="{{ request.url }}">
+  <link rel="canonical" href="{{ request.url }}">
   <title>WebVerify AI — Website Authenticity Analyzer</title>
   
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Bootstrap 5 CSS -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Font Awesome 6 -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></noscript>
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='20260913') }}">
 </head>
 <body>
   <!-- Ambient Gradient Background -->
@@ -29,7 +39,7 @@
         <span class="brand-text">WEBVERIFY AI</span>
         <span class="brand-badge d-none d-sm-inline">AUTHENTICITY ANALYZER</span>
       </a>
-      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navMenu">
@@ -66,11 +76,12 @@
       <!-- URL Input Card -->
       <div class="row justify-content-center">
         <div class="col-lg-9 col-xl-8">
-          <form id="analyze-form" onsubmit="handleAnalyzeSubmit(event)">
+          <form id="analyze-form" onsubmit="handleAnalyzeSubmit(event)" novalidate>
             <div class="search-wrapper d-flex align-items-center mb-3">
               <i class="fa-solid fa-globe text-info ms-3 fs-5"></i>
+              <label for="url-input" class="visually-hidden">Website URL to analyze</label>
               <input type="text" id="url-input" class="form-control search-input" 
-                     placeholder="Enter website URL (e.g., https://example.com, mybusiness.vercel.app)" required>
+                     placeholder="Enter website URL (e.g., https://example.com, mybusiness.vercel.app)" autocomplete="url" inputmode="url" spellcheck="false" required>
               <button type="submit" id="analyze-btn" class="btn search-btn d-flex align-items-center gap-2">
                 <span>ANALYZE WEBSITE</span>
                 <i class="fa-solid fa-arrow-right"></i>
@@ -81,14 +92,14 @@
           <!-- Quick Sample Chips -->
           <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 mt-2">
             <span class="text-muted small me-1">Try samples:</span>
-            <span class="sample-chip" onclick="fillAndScan('https://stripe.com')">stripe.com (Real)</span>
-            <span class="sample-chip" onclick="fillAndScan('https://github.com')">github.com (Enterprise)</span>
-            <span class="sample-chip" onclick="fillAndScan('https://example.com')">example.com (Minimal)</span>
-            <span class="sample-chip" onclick="fillAndScan('https://react-bootstrap.netlify.app')">netlify.app (Jamstack)</span>
+            <button type="button" class="sample-chip" onclick="fillAndScan('https://stripe.com')">stripe.com (Real)</button>
+            <button type="button" class="sample-chip" onclick="fillAndScan('https://github.com')">github.com (Enterprise)</button>
+            <button type="button" class="sample-chip" onclick="fillAndScan('https://example.com')">example.com (Minimal)</button>
+            <button type="button" class="sample-chip" onclick="fillAndScan('https://react-bootstrap.netlify.app')">netlify.app (Jamstack)</button>
           </div>
 
           <!-- Alert Container -->
-          <div id="alert-box" class="mt-4 d-none"></div>
+          <div id="alert-box" class="mt-4 d-none" role="alert" aria-live="polite"></div>
         </div>
       </div>
     </section>
@@ -145,7 +156,9 @@
             <span class="text-muted small text-uppercase fw-bold letter-spacing-1 mb-2">Authenticity Score</span>
             
             <div class="score-circle-container my-3">
-              <svg class="score-svg" width="170" height="170">
+                <svg class="score-svg" width="170" height="170" viewBox="0 0 170 170" role="img" aria-labelledby="score-title score-description">
+                  <title id="score-title">Authenticity score</title>
+                  <desc id="score-description">A circular indicator showing the analyzed website score out of 100.</desc>
                 <circle class="score-bg-circle" cx="85" cy="85" r="70"></circle>
                 <circle id="score-circle-bar" class="score-progress-circle" cx="85" cy="85" r="70"></circle>
               </svg>
@@ -276,37 +289,37 @@
       <div class="glass-card p-4">
         <ul class="nav nav-tabs nav-tabs-custom mb-4" id="analysisTabs" role="tablist">
           <li class="nav-item">
-            <button class="nav-link active" id="tab-signals-btn" data-bs-toggle="tab" data-bs-target="#tab-signals">
+            <button class="nav-link active" id="tab-signals-btn" role="tab" aria-controls="tab-signals" aria-selected="true" data-bs-toggle="tab" data-bs-target="#tab-signals">
               <i class="fa-solid fa-list-check me-1"></i> Signals & Warnings
             </button>
           </li>
           <li class="nav-item">
-            <button class="nav-link" id="tab-breakdown-btn" data-bs-toggle="tab" data-bs-target="#tab-breakdown">
+            <button class="nav-link" id="tab-breakdown-btn" role="tab" aria-controls="tab-breakdown" aria-selected="false" data-bs-toggle="tab" data-bs-target="#tab-breakdown">
               <i class="fa-solid fa-chart-pie me-1"></i> Scoring Breakdown
             </button>
           </li>
           <li class="nav-item">
-            <button class="nav-link" id="tab-domain-btn" data-bs-toggle="tab" data-bs-target="#tab-domain">
+            <button class="nav-link" id="tab-domain-btn" role="tab" aria-controls="tab-domain" aria-selected="false" data-bs-toggle="tab" data-bs-target="#tab-domain">
               <i class="fa-solid fa-network-wired me-1"></i> Domain & RDAP
             </button>
           </li>
           <li class="nav-item">
-            <button class="nav-link" id="tab-tech-btn" data-bs-toggle="tab" data-bs-target="#tab-tech">
+            <button class="nav-link" id="tab-tech-btn" role="tab" aria-controls="tab-tech" aria-selected="false" data-bs-toggle="tab" data-bs-target="#tab-tech">
               <i class="fa-solid fa-code me-1"></i> Technologies
             </button>
           </li>
           <li class="nav-item">
-            <button class="nav-link" id="tab-content-btn" data-bs-toggle="tab" data-bs-target="#tab-content">
+            <button class="nav-link" id="tab-content-btn" role="tab" aria-controls="tab-content" aria-selected="false" data-bs-toggle="tab" data-bs-target="#tab-content">
               <i class="fa-solid fa-file-lines me-1"></i> Content & Dummy Checks
             </button>
           </li>
           <li class="nav-item">
-            <button class="nav-link" id="tab-contacts-btn" data-bs-toggle="tab" data-bs-target="#tab-contacts">
+            <button class="nav-link" id="tab-contacts-btn" role="tab" aria-controls="tab-contacts" aria-selected="false" data-bs-toggle="tab" data-bs-target="#tab-contacts">
               <i class="fa-solid fa-address-book me-1"></i> Contacts & Identity
             </button>
           </li>
           <li class="nav-item">
-            <button class="nav-link" id="tab-links-btn" data-bs-toggle="tab" data-bs-target="#tab-links">
+            <button class="nav-link" id="tab-links-btn" role="tab" aria-controls="tab-links" aria-selected="false" data-bs-toggle="tab" data-bs-target="#tab-links">
               <i class="fa-solid fa-link me-1"></i> Broken Links
             </button>
           </li>
@@ -657,7 +670,7 @@
               
               <div class="accordion-item bg-transparent border-bottom border-secondary border-opacity-25">
                 <h2 class="accordion-header">
-                  <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                  <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="false" aria-controls="faq1">
                     Does a website hosted on Vercel or Netlify mean it is fake?
                   </button>
                 </h2>
@@ -670,7 +683,7 @@
 
               <div class="accordion-item bg-transparent border-bottom border-secondary border-opacity-25">
                 <h2 class="accordion-header">
-                  <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                  <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2">
                     Does an SSL certificate (HTTPS) guarantee a business is real?
                   </button>
                 </h2>
@@ -683,7 +696,7 @@
 
               <div class="accordion-item bg-transparent border-bottom border-secondary border-opacity-25">
                 <h2 class="accordion-header">
-                  <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                  <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3">
                     Can WebVerify AI prove 100% certainty?
                   </button>
                 </h2>
@@ -723,12 +736,12 @@
   </footer>
 
   <!-- Scan History Modal -->
-  <div class="modal fade" id="historyModal" tabindex="-1">
+  <div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content glass-card border-secondary text-white">
         <div class="modal-header border-secondary border-opacity-25">
-          <h5 class="modal-title fw-bold"><i class="fa-solid fa-clock-rotate-left text-info me-2"></i> Scan History</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          <h5 class="modal-title fw-bold" id="historyModalLabel"><i class="fa-solid fa-clock-rotate-left text-info me-2"></i> Scan History</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close scan history"></button>
         </div>
         <div class="modal-body p-4" style="max-height: 60vh; overflow-y: auto;">
           <div id="history-items-container">
@@ -745,9 +758,7 @@
     </div>
   </div>
 
-  <!-- Bootstrap 5 JS Bundle -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <!-- Application JS -->
-  <script src="/static/js/app.js?v=20260913"></script>
+  <script src="/static/js/app.js?v=20260913" defer></script>
 </body>
 </html>

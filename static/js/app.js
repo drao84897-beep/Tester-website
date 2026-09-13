@@ -1,6 +1,92 @@
 let currentScanResult = null;
 let scanProgressInterval = null;
 
+function initInteractiveShell() {
+  const navMenu = document.getElementById("navMenu");
+  const navToggle = document.querySelector(".navbar-toggler");
+  if (navMenu && navToggle) {
+    navToggle.addEventListener("click", () => {
+      const isOpen = navMenu.classList.toggle("show");
+      navToggle.setAttribute("aria-expanded", String(isOpen));
+    });
+    navMenu.querySelectorAll(".nav-link").forEach((link) => {
+      link.addEventListener("click", () => {
+        navMenu.classList.remove("show");
+        navToggle.setAttribute("aria-expanded", "false");
+      });
+    });
+  }
+
+  document.querySelectorAll('[data-bs-toggle="tab"]').forEach((tabButton) => {
+    tabButton.addEventListener("click", () => activateTab(tabButton));
+  });
+
+  document.querySelectorAll('[data-bs-toggle="collapse"]').forEach((collapseButton) => {
+    collapseButton.addEventListener("click", () => toggleCollapse(collapseButton));
+  });
+
+  document.querySelectorAll('[data-bs-dismiss="modal"]').forEach((button) => {
+    button.addEventListener("click", closeHistoryModal);
+  });
+}
+
+function toggleCollapse(collapseButton) {
+  const targetSelector = collapseButton.getAttribute("data-bs-target");
+  const target = targetSelector ? document.querySelector(targetSelector) : null;
+  if (!target) return;
+
+  const shouldOpen = !target.classList.contains("show");
+  const parentSelector = target.getAttribute("data-bs-parent");
+  if (shouldOpen && parentSelector) {
+    document.querySelectorAll(`${parentSelector} .accordion-collapse.show`).forEach((item) => {
+      item.classList.remove("show");
+    });
+    document.querySelectorAll(`${parentSelector} [data-bs-toggle="collapse"]`).forEach((button) => {
+      button.setAttribute("aria-expanded", "false");
+    });
+  }
+  target.classList.toggle("show", shouldOpen);
+  collapseButton.setAttribute("aria-expanded", String(shouldOpen));
+}
+
+function activateTab(tabButton) {
+  const targetSelector = tabButton.getAttribute("data-bs-target");
+  const target = targetSelector ? document.querySelector(targetSelector) : null;
+  if (!target) return;
+
+  document.querySelectorAll('[data-bs-toggle="tab"]').forEach((button) => {
+    const active = button === tabButton;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-selected", String(active));
+  });
+  document.querySelectorAll("#analysisTabsContent > .tab-pane").forEach((pane) => {
+    pane.classList.toggle("show", pane === target);
+    pane.classList.toggle("active", pane === target);
+  });
+}
+
+function closeHistoryModal() {
+  const modal = document.getElementById("historyModal");
+  if (!modal) return;
+  modal.classList.remove("show");
+  modal.style.display = "none";
+  modal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+  document.querySelector(".webverify-modal-backdrop")?.remove();
+}
+
+document.addEventListener("DOMContentLoaded", initInteractiveShell);
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  })[character]);
+}
+
 // Handle URL Submission
 async function handleAnalyzeSubmit(event) {
   if (event) event.preventDefault();
@@ -202,17 +288,17 @@ function renderResults(data) {
   }
 
   const strengthsList = document.getElementById("ai-strengths-list");
-  strengthsList.innerHTML = (ai.strengths || []).map(s => `<li class="py-1"><i class="fa-solid fa-check text-success me-2"></i>${s}</li>`).join("");
+  strengthsList.innerHTML = (ai.strengths || []).map(s => `<li class="py-1"><i class="fa-solid fa-check text-success me-2"></i>${escapeHtml(s)}</li>`).join("");
 
   const warningsList = document.getElementById("ai-warnings-list");
-  warningsList.innerHTML = (ai.warnings || []).map(w => `<li class="py-1"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>${w}</li>`).join("");
+  warningsList.innerHTML = (ai.warnings || []).map(w => `<li class="py-1"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>${escapeHtml(w)}</li>`).join("");
 
   // TAB 1: Verified Signals & Warnings
   const sigContainer = document.getElementById("verified-signals-list");
   sigContainer.innerHTML = (data.signals || []).map(sig => `
     <div class="signal-item">
       <i class="fa-solid fa-circle-check signal-icon-pass"></i>
-      <span class="text-white-50 small">${sig}</span>
+      <span class="text-white-50 small">${escapeHtml(sig)}</span>
     </div>
   `).join("");
 
@@ -220,7 +306,7 @@ function renderResults(data) {
   warnContainer.innerHTML = (data.warnings || []).map(wrn => `
     <div class="signal-item">
       <i class="fa-solid fa-triangle-exclamation signal-icon-warn"></i>
-      <span class="text-white-50 small">${wrn}</span>
+      <span class="text-white-50 small">${escapeHtml(wrn)}</span>
     </div>
   `).join("");
 
@@ -234,10 +320,10 @@ function renderResults(data) {
     const pointsPrefix = row.points > 0 ? `+${row.points}` : `${row.points}`;
     return `
       <tr>
-        <td class="fw-bold text-white small">${row.category}</td>
-        <td class="text-white-50 small">${row.detail}</td>
+        <td class="fw-bold text-white small">${escapeHtml(row.category)}</td>
+        <td class="text-white-50 small">${escapeHtml(row.detail)}</td>
         <td class="fw-bold ${row.points >= 0 ? 'text-success' : 'text-danger'} small">${pointsPrefix}</td>
-        <td><span class="badge ${badgeClass} small">${row.status}</span></td>
+        <td><span class="badge ${badgeClass} small">${escapeHtml(row.status)}</span></td>
       </tr>
     `;
   }).join("");
@@ -253,7 +339,7 @@ function renderResults(data) {
   document.getElementById("tech-hosting-name").textContent = tech.hosting || "Standard";
   document.getElementById("tech-hosting-desc").textContent = tech.hosting_interpretation || "";
   const techBadges = document.getElementById("tech-badges-list");
-  techBadges.innerHTML = (tech.technologies || []).map(t => `<span class="tech-pill"><i class="fa-solid fa-check text-info"></i> ${t}</span>`).join("");
+  techBadges.innerHTML = (tech.technologies || []).map(t => `<span class="tech-pill"><i class="fa-solid fa-check text-info"></i> ${escapeHtml(t)}</span>`).join("");
 
   // TAB 5: Content Quality & Dummy Checks
   document.getElementById("content-word-count").textContent = content.word_count || 0;
@@ -264,7 +350,7 @@ function renderResults(data) {
   if (content.dummy_signals && content.dummy_signals.length > 0) {
     dummyBox.innerHTML = content.dummy_signals.map(ds => `
       <div class="alert alert-warning bg-warning bg-opacity-10 border-warning text-warning p-2 small mb-2">
-        <i class="fa-solid fa-triangle-exclamation me-1"></i> ${ds.label} (${ds.occurrences} instance${ds.occurrences > 1 ? 's' : ''})
+        <i class="fa-solid fa-triangle-exclamation me-1"></i> ${escapeHtml(ds.label)} (${escapeHtml(ds.occurrences)} instance${ds.occurrences > 1 ? 's' : ''})
       </div>
     `).join("");
   } else {
@@ -280,8 +366,8 @@ function renderResults(data) {
   const socialsBox = document.getElementById("contact-socials");
   if (contacts.social_links && Object.keys(contacts.social_links).length > 0) {
     socialsBox.innerHTML = Object.entries(contacts.social_links).map(([platform, link]) => `
-      <a href="${link}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-info btn-sm rounded-pill px-3">
-        <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> ${platform}
+      <a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-info btn-sm rounded-pill px-3">
+        <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> ${escapeHtml(platform)}
       </a>
     `).join("");
   } else {
@@ -295,9 +381,9 @@ function renderResults(data) {
   if (linksData.details && linksData.details.length > 0) {
     linksTbody.innerHTML = linksData.details.map(ld => `
       <tr>
-        <td class="text-white-50 small text-truncate" style="max-width: 320px;">${ld.url}</td>
-        <td class="text-info small">${ld.status_code}</td>
-        <td><span class="badge ${ld.classification === 'Working' ? 'bg-success' : (ld.classification === 'Redirect' ? 'bg-warning text-dark' : 'bg-danger')}">${ld.classification}</span></td>
+        <td class="text-white-50 small text-truncate" style="max-width: 320px;">${escapeHtml(ld.url)}</td>
+        <td class="text-info small">${escapeHtml(ld.status_code)}</td>
+        <td><span class="badge ${ld.classification === 'Working' ? 'bg-success' : (ld.classification === 'Redirect' ? 'bg-warning text-dark' : 'bg-danger')}">${escapeHtml(ld.classification)}</span></td>
       </tr>
     `).join("");
   } else {
@@ -334,7 +420,7 @@ function animateScoreCounter(element, target) {
 function showAlert(message, type = "danger") {
   const alertBox = document.getElementById("alert-box");
   alertBox.className = `alert alert-${type} bg-${type} bg-opacity-20 border-${type} text-white mt-4`;
-  alertBox.innerHTML = `<i class="fa-solid fa-circle-exclamation me-2"></i>${message}`;
+  alertBox.textContent = message;
   alertBox.classList.remove("d-none");
   alertBox.scrollIntoView({ behavior: "smooth" });
 }
@@ -350,8 +436,18 @@ function printReport() {
 
 // History Management
 async function openHistoryModal() {
-  const modal = new bootstrap.Modal(document.getElementById("historyModal"));
-  modal.show();
+  const modal = document.getElementById("historyModal");
+  if (!modal) return;
+  modal.classList.add("show");
+  modal.style.display = "block";
+  modal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+  if (!document.querySelector(".webverify-modal-backdrop")) {
+    const backdrop = document.createElement("div");
+    backdrop.className = "modal-backdrop fade show webverify-modal-backdrop";
+    backdrop.addEventListener("click", closeHistoryModal);
+    document.body.appendChild(backdrop);
+  }
   await loadHistoryItems();
 }
 
@@ -369,13 +465,13 @@ async function loadHistoryItems() {
     container.innerHTML = list.map(item => `
       <div class="history-item d-flex flex-wrap align-items-center justify-content-between gap-3">
         <div>
-          <h6 class="text-white mb-0 fw-bold">${item.domain || item.url}</h6>
-          <small class="text-muted">${item.created_at} · Hosting: ${item.hosting || 'Standard'}</small>
+          <h6 class="text-white mb-0 fw-bold">${escapeHtml(item.domain || item.url)}</h6>
+          <small class="text-muted">${escapeHtml(item.created_at)} · Hosting: ${escapeHtml(item.hosting || 'Standard')}</small>
         </div>
         <div class="d-flex align-items-center gap-3">
           <div class="text-end">
             <span class="badge ${item.classification === 'LIKELY REAL BUSINESS' ? 'badge-real' : (item.classification === 'LIKELY DEMO / DUMMY' ? 'badge-demo' : 'badge-verify')}">${item.score}/100</span>
-            <div class="small text-white-50" style="font-size: 0.75rem;">${item.classification}</div>
+            <div class="small text-white-50" style="font-size: 0.75rem;">${escapeHtml(item.classification)}</div>
           </div>
           <button class="btn btn-outline-info btn-sm rounded-pill" onclick="viewHistoricalReport(${item.id})">
             <i class="fa-solid fa-eye me-1"></i> View
@@ -392,9 +488,7 @@ async function loadHistoryItems() {
 }
 
 async function viewHistoricalReport(scanId) {
-  const modalEl = document.getElementById("historyModal");
-  const modalInstance = bootstrap.Modal.getInstance(modalEl);
-  if (modalInstance) modalInstance.hide();
+  closeHistoryModal();
 
   try {
     const res = await fetch(`/api/report/${scanId}`);
