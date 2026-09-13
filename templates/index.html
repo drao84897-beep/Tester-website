@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebVerify AI — Website Authenticity Analyzer</title>
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <!-- Ambient Gradient Background -->
+  <div class="bg-mesh"></div>
+
+  <!-- Top Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+        <i class="fa-solid fa-shield-halved text-info fs-4"></i>
+        <span class="brand-text">WEBVERIFY AI</span>
+        <span class="brand-badge d-none d-sm-inline">AUTHENTICITY ANALYZER</span>
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav ms-auto align-items-lg-center gap-2">
+          <li class="nav-item"><a class="nav-link text-white-50" href="#how-it-works">How It Works</a></li>
+          <li class="nav-item"><a class="nav-link text-white-50" href="#features">Features</a></li>
+          <li class="nav-item"><a class="nav-link text-white-50" href="#scoring-info">Scoring</a></li>
+          <li class="nav-item"><a class="nav-link text-white-50" href="#faq">FAQ</a></li>
+          <li class="nav-item ms-lg-2">
+            <button class="btn btn-outline-info btn-sm rounded-pill px-3" onclick="openHistoryModal()">
+              <i class="fa-solid fa-clock-rotate-left me-1"></i> Scan History
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="container py-5">
+    
+    <!-- Hero & Search Section -->
+    <section class="text-center py-4 py-lg-5" id="hero-section">
+      <div class="badge bg-primary bg-opacity-25 border border-primary text-info px-3 py-2 rounded-pill mb-3">
+        <i class="fa-solid fa-microchip me-1"></i> Next-Gen Heuristic & Technical Analysis
+      </div>
+      <h1 class="hero-title text-white mb-3">
+        Know What’s <span class="hero-gradient-text">Behind a Website.</span>
+      </h1>
+      <p class="hero-subtitle mb-4">
+        Analyze technical, domain, content, and business signals to determine whether a website appears genuine, unfinished, or requires further verification.
+      </p>
+
+      <!-- URL Input Card -->
+      <div class="row justify-content-center">
+        <div class="col-lg-9 col-xl-8">
+          <form id="analyze-form" onsubmit="handleAnalyzeSubmit(event)">
+            <div class="search-wrapper d-flex align-items-center mb-3">
+              <i class="fa-solid fa-globe text-info ms-3 fs-5"></i>
+              <input type="text" id="url-input" class="form-control search-input" 
+                     placeholder="Enter website URL (e.g., https://example.com, mybusiness.vercel.app)" required>
+              <button type="submit" id="analyze-btn" class="btn search-btn d-flex align-items-center gap-2">
+                <span>ANALYZE WEBSITE</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+          </form>
+
+          <!-- Quick Sample Chips -->
+          <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 mt-2">
+            <span class="text-muted small me-1">Try samples:</span>
+            <span class="sample-chip" onclick="fillAndScan('https://stripe.com')">stripe.com (Real)</span>
+            <span class="sample-chip" onclick="fillAndScan('https://github.com')">github.com (Enterprise)</span>
+            <span class="sample-chip" onclick="fillAndScan('https://example.com')">example.com (Minimal)</span>
+            <span class="sample-chip" onclick="fillAndScan('https://react-bootstrap.netlify.app')">netlify.app (Jamstack)</span>
+          </div>
+
+          <!-- Alert Container -->
+          <div id="alert-box" class="mt-4 d-none"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scan Progress Indicator (Hidden initially) -->
+    <div id="scan-progress-box" class="d-none my-4">
+      <div class="glass-card p-4 mx-auto" style="max-width: 650px;">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="spinner-border text-info progress-pulse" role="status"></div>
+          <div>
+            <h5 class="mb-0 text-white">Analyzing Website Authenticity...</h5>
+            <small class="text-muted" id="progress-target-url">Target: https://...</small>
+          </div>
+        </div>
+
+        <div class="list-unstyled mb-0 small">
+          <div class="step-item active py-1" id="step-1"><i class="fa-solid fa-circle-notch fa-spin me-2"></i> SSRF validation & DNS address safety check</div>
+          <div class="step-item py-1" id="step-2"><i class="fa-regular fa-circle me-2"></i> Inspecting SSL certificate & HTTPS transport enforcement</div>
+          <div class="step-item py-1" id="step-3"><i class="fa-regular fa-circle me-2"></i> Fetching homepage DOM & shallow crawling key pages</div>
+          <div class="step-item py-1" id="step-4"><i class="fa-regular fa-circle me-2"></i> Extracting corporate identity, contacts & social footprints</div>
+          <div class="step-item py-1" id="step-5"><i class="fa-regular fa-circle me-2"></i> Querying public RDAP domain longevity & registrar</div>
+          <div class="step-item py-1" id="step-6"><i class="fa-regular fa-circle me-2"></i> Detecting dummy text, Lorem Ipsum & placeholder indicators</div>
+          <div class="step-item py-1" id="step-7"><i class="fa-regular fa-circle me-2"></i> Calculating explainable Authenticity Score & AI report</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Dashboard Section (Hidden initially) -->
+    <section id="results-dashboard" class="d-none py-3">
+      
+      <!-- Dashboard Top Action Bar -->
+      <div class="glass-card p-3 mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+          <span class="text-muted small">ANALYZED TARGET:</span>
+          <h5 class="mb-0 text-white fw-bold" id="res-target-url">https://example.com</h5>
+          <small class="text-info" id="res-normalized-url"></small>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-outline-light btn-sm rounded-pill px-3" onclick="printReport()">
+            <i class="fa-solid fa-print me-1"></i> Print / Download Report
+          </button>
+          <button class="btn btn-info btn-sm rounded-pill px-3 text-dark fw-bold" onclick="resetToScanAnother()">
+            <i class="fa-solid fa-magnifying-glass me-1"></i> Scan Another Website
+          </button>
+        </div>
+      </div>
+
+      <!-- Core Score & Summary Grid Row -->
+      <div class="row g-4 mb-4">
+        
+        <!-- Score Card -->
+        <div class="col-lg-4">
+          <div class="glass-card p-4 h-100 text-center d-flex flex-column justify-content-center">
+            <span class="text-muted small text-uppercase fw-bold letter-spacing-1 mb-2">Authenticity Score</span>
+            
+            <div class="score-circle-container my-3">
+              <svg class="score-svg" width="170" height="170">
+                <circle class="score-bg-circle" cx="85" cy="85" r="70"></circle>
+                <circle id="score-circle-bar" class="score-progress-circle" cx="85" cy="85" r="70"></circle>
+              </svg>
+              <div class="score-text-inner">
+                <div class="score-value text-white" id="score-num">0</div>
+                <div class="score-denom">/ 100</div>
+              </div>
+            </div>
+
+            <div id="classification-badge-container" class="mb-2">
+              <span id="classification-badge" class="badge-classification badge-real">LIKELY REAL BUSINESS</span>
+            </div>
+
+            <p class="text-muted small mb-0 px-2" id="score-caption">
+              Analysis based on technical, domain, content, and business indicators.
+            </p>
+            <div id="verdict-explanation" class="small text-start mt-3 p-3 rounded bg-dark bg-opacity-50 text-white-50">
+              Scan a website to see the verdict and the reasons behind it.
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Summary Grid -->
+        <div class="col-lg-8">
+          <div class="glass-card p-4 h-100">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <h5 class="text-white mb-0 fw-bold"><i class="fa-solid fa-gauge-high text-info me-2"></i> Quick Summary</h5>
+              <span class="badge bg-secondary bg-opacity-25 text-white-50" id="scan-timestamp">Timestamp</span>
+            </div>
+
+            <div class="row g-2" id="summary-grid">
+              <div class="col-6 col-sm-4">
+                <div class="summary-mini-card">
+                  <div class="summary-label">HTTPS</div>
+                  <div class="summary-val" id="sum-https">PASS</div>
+                </div>
+              </div>
+              <div class="col-6 col-sm-4">
+                <div class="summary-mini-card">
+                  <div class="summary-label">SSL Certificate</div>
+                  <div class="summary-val" id="sum-ssl">PASS</div>
+                </div>
+              </div>
+              <div class="col-6 col-sm-4">
+                <div class="summary-mini-card">
+                  <div class="summary-label">Business Identity</div>
+                  <div class="summary-val" id="sum-identity">PASS</div>
+                </div>
+              </div>
+              <div class="col-6 col-sm-4">
+                <div class="summary-mini-card">
+                  <div class="summary-label">Contact Info</div>
+                  <div class="summary-val" id="sum-contact">PASS</div>
+                </div>
+              </div>
+              <div class="col-6 col-sm-4">
+                <div class="summary-mini-card">
+                  <div class="summary-label">Domain History</div>
+                  <div class="summary-val" id="sum-domain">CHECK</div>
+                </div>
+              </div>
+              <div class="col-6 col-sm-4">
+                <div class="summary-mini-card">
+                  <div class="summary-label">Content Quality</div>
+                  <div class="summary-val" id="sum-content">PASS</div>
+                </div>
+              </div>
+              <div class="col-6 col-sm-4">
+                <div class="summary-mini-card">
+                  <div class="summary-label">Social Presence</div>
+                  <div class="summary-val" id="sum-social">PASS</div>
+                </div>
+              </div>
+              <div class="col-6 col-sm-4">
+                <div class="summary-mini-card">
+                  <div class="summary-label">Dummy Signals</div>
+                  <div class="summary-val" id="sum-dummy">LOW</div>
+                </div>
+              </div>
+              <div class="col-6 col-sm-4">
+                <div class="summary-mini-card">
+                  <div class="summary-label">Hosting Platform</div>
+                  <div class="summary-val text-info text-truncate" id="sum-hosting">Standard</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-3 p-2 rounded bg-dark bg-opacity-50 small text-muted border border-secondary border-opacity-25">
+              <i class="fa-solid fa-circle-info text-info me-1"></i>
+              <span id="hosting-interpretation-text">Hosting platform alone does not determine authenticity.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Analysis Card -->
+      <div class="ai-card p-4 mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+          <div class="d-flex align-items-center gap-2">
+            <i class="fa-solid fa-brain text-info fs-4"></i>
+            <h5 class="text-white mb-0 fw-bold">AI Authenticity Analysis</h5>
+          </div>
+          <span class="ai-badge" id="ai-provider-badge">Rule-Based Intelligence</span>
+        </div>
+
+        <p class="text-white-50 lead fs-6 mb-4" id="ai-summary-text">
+          Loading AI synthesis...
+        </p>
+
+        <div class="row g-4 mb-3">
+          <div class="col-md-6">
+            <h6 class="text-success fw-bold mb-2"><i class="fa-solid fa-circle-check me-2"></i>Key Strengths Identified</h6>
+            <ul class="list-unstyled mb-0 small" id="ai-strengths-list"></ul>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-warning fw-bold mb-2"><i class="fa-solid fa-triangle-exclamation me-2"></i>Warnings & Due Diligence Flags</h6>
+            <ul class="list-unstyled mb-0 small" id="ai-warnings-list"></ul>
+          </div>
+        </div>
+
+        <div class="p-3 rounded bg-black bg-opacity-40 border border-info border-opacity-25 mt-3">
+          <div class="fw-bold text-info small text-uppercase mb-1"><i class="fa-solid fa-compass me-1"></i> Recommendation</div>
+          <p class="mb-0 text-white-50 small" id="ai-recommendation-text"></p>
+        </div>
+      </div>
+
+      <!-- Detailed Analysis Tabbed Interface -->
+      <div class="glass-card p-4">
+        <ul class="nav nav-tabs nav-tabs-custom mb-4" id="analysisTabs" role="tablist">
+          <li class="nav-item">
+            <button class="nav-link active" id="tab-signals-btn" data-bs-toggle="tab" data-bs-target="#tab-signals">
+              <i class="fa-solid fa-list-check me-1"></i> Signals & Warnings
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" id="tab-breakdown-btn" data-bs-toggle="tab" data-bs-target="#tab-breakdown">
+              <i class="fa-solid fa-chart-pie me-1"></i> Scoring Breakdown
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" id="tab-domain-btn" data-bs-toggle="tab" data-bs-target="#tab-domain">
+              <i class="fa-solid fa-network-wired me-1"></i> Domain & RDAP
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" id="tab-tech-btn" data-bs-toggle="tab" data-bs-target="#tab-tech">
+              <i class="fa-solid fa-code me-1"></i> Technologies
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" id="tab-content-btn" data-bs-toggle="tab" data-bs-target="#tab-content">
+              <i class="fa-solid fa-file-lines me-1"></i> Content & Dummy Checks
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" id="tab-contacts-btn" data-bs-toggle="tab" data-bs-target="#tab-contacts">
+              <i class="fa-solid fa-address-book me-1"></i> Contacts & Identity
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" id="tab-links-btn" data-bs-toggle="tab" data-bs-target="#tab-links">
+              <i class="fa-solid fa-link me-1"></i> Broken Links
+            </button>
+          </li>
+        </ul>
+
+        <div class="tab-content" id="analysisTabsContent">
+          
+          <!-- TAB 1: Signals & Warnings -->
+          <div class="tab-pane fade show active" id="tab-signals">
+            <div class="row g-4">
+              <div class="col-md-6">
+                <h6 class="text-white fw-bold mb-3"><i class="fa-solid fa-thumbs-up text-success me-2"></i>Positive Authenticity Signals</h6>
+                <div id="verified-signals-list"></div>
+              </div>
+              <div class="col-md-6">
+                <h6 class="text-white fw-bold mb-3"><i class="fa-solid fa-circle-exclamation text-warning me-2"></i>Risk Factors & Warnings</h6>
+                <div id="detected-warnings-list"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: Scoring Breakdown -->
+          <div class="tab-pane fade" id="tab-breakdown">
+            <div class="table-responsive">
+              <table class="table table-dark table-hover align-middle mb-0">
+                <thead>
+                  <tr class="text-muted small">
+                    <th>FACTOR / CATEGORY</th>
+                    <th>DETAIL / OBSERVATION</th>
+                    <th>POINTS</th>
+                    <th>STATUS</th>
+                  </tr>
+                </thead>
+                <tbody id="score-breakdown-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- TAB 3: Domain & RDAP -->
+          <div class="tab-pane fade" id="tab-domain">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="summary-mini-card">
+                  <div class="summary-label">Target Domain</div>
+                  <div class="summary-val text-info" id="dom-name">-</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="summary-mini-card">
+                  <div class="summary-label">Domain Age</div>
+                  <div class="summary-val" id="dom-age">-</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="summary-mini-card">
+                  <div class="summary-label">Official Registrar</div>
+                  <div class="summary-val" id="dom-registrar">-</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="summary-mini-card">
+                  <div class="summary-label">Creation Date</div>
+                  <div class="summary-val" id="dom-created">-</div>
+                </div>
+              </div>
+              <div class="col-md-12">
+                <div class="summary-mini-card">
+                  <div class="summary-label">Nameservers</div>
+                  <div class="summary-val text-white-50 small" id="dom-nameservers">-</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 4: Technologies -->
+          <div class="tab-pane fade" id="tab-tech">
+            <div class="mb-4">
+              <h6 class="text-white fw-bold mb-2">Hosting & Deployment Infrastructure</h6>
+              <div class="p-3 rounded bg-dark bg-opacity-50 border border-secondary border-opacity-25">
+                <div class="fw-bold text-info" id="tech-hosting-name">Hosting</div>
+                <div class="small text-white-50 mt-1" id="tech-hosting-desc">Interpretation</div>
+              </div>
+            </div>
+
+            <h6 class="text-white fw-bold mb-3">Detected Web Technologies</h6>
+            <div class="d-flex flex-wrap gap-2" id="tech-badges-list"></div>
+          </div>
+
+          <!-- TAB 5: Content & Dummy Checks -->
+          <div class="tab-pane fade" id="tab-content">
+            <div class="row g-3 mb-4">
+              <div class="col-sm-4">
+                <div class="summary-mini-card">
+                  <div class="summary-label">Total Word Count</div>
+                  <div class="summary-val" id="content-word-count">0</div>
+                </div>
+              </div>
+              <div class="col-sm-4">
+                <div class="summary-mini-card">
+                  <div class="summary-label">Content Quality Rating</div>
+                  <div class="summary-val" id="content-rating-val">High</div>
+                </div>
+              </div>
+              <div class="col-sm-4">
+                <div class="summary-mini-card">
+                  <div class="summary-label">Heading Hierarchy</div>
+                  <div class="summary-val" id="content-heading-val">Complete</div>
+                </div>
+              </div>
+            </div>
+
+            <h6 class="text-white fw-bold mb-3">Dummy & Placeholder Content Detection</h6>
+            <div id="dummy-signals-container"></div>
+          </div>
+
+          <!-- TAB 6: Contacts & Identity -->
+          <div class="tab-pane fade" id="tab-contacts">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="summary-mini-card">
+                  <div class="summary-label">Identified Business Name</div>
+                  <div class="summary-val text-info" id="contact-biz-name">-</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="summary-mini-card">
+                  <div class="summary-label">Public Email Channels</div>
+                  <div class="summary-val" id="contact-emails">-</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="summary-mini-card">
+                  <div class="summary-label">Telephone Contacts</div>
+                  <div class="summary-val" id="contact-phones">-</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="summary-mini-card">
+                  <div class="summary-label">Physical Address / Headquarters</div>
+                  <div class="summary-val" id="contact-address">-</div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="summary-mini-card">
+                  <div class="summary-label">Connected Social Media Profiles</div>
+                  <div class="d-flex flex-wrap gap-2 mt-2" id="contact-socials">-</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 7: Broken Links -->
+          <div class="tab-pane fade" id="tab-links">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <h6 class="text-white fw-bold mb-0">Internal Link Health Verification (Sample)</h6>
+              <span class="badge bg-secondary text-white" id="links-summary-badge">0 Checked</span>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-dark table-sm align-middle mb-0">
+                <thead>
+                  <tr class="text-muted small">
+                    <th>URL ROUTE</th>
+                    <th>HTTP STATUS</th>
+                    <th>CLASSIFICATION</th>
+                  </tr>
+                </thead>
+                <tbody id="broken-links-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Information & Educational Sections -->
+    <div id="landing-educational-sections">
+      
+      <!-- Section: How It Works -->
+      <section class="py-5" id="how-it-works">
+        <div class="text-center mb-5">
+          <h2 class="text-white fw-bold">How WebVerify AI Works</h2>
+          <p class="text-muted">A multi-vector inspection pipeline designed to assess digital authenticity without biased assumptions.</p>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-md-4">
+            <div class="glass-card p-4 h-100 text-center">
+              <div class="badge bg-info bg-opacity-10 text-info p-3 rounded-circle mb-3 fs-4">
+                <i class="fa-solid fa-radar"></i>
+              </div>
+              <h5 class="text-white fw-bold">1. Technical & SSRF Sandbox</h5>
+              <p class="text-muted small">
+                Every target URL undergoes strict SSRF validation before establishing connections. Our engine analyzes SSL/TLS certificates, HTTPS enforcement, and server headers.
+              </p>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="glass-card p-4 h-100 text-center">
+              <div class="badge bg-primary bg-opacity-10 text-primary p-3 rounded-circle mb-3 fs-4">
+                <i class="fa-solid fa-sitemap"></i>
+              </div>
+              <h5 class="text-white fw-bold">2. Deep Content & DOM Analysis</h5>
+              <p class="text-muted small">
+                The engine safely shallow-crawls key pages (About, Contact, Terms, Services) looking for real business identity markers vs dummy Lorem Ipsum templates and unfinished sections.
+              </p>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="glass-card p-4 h-100 text-center">
+              <div class="badge bg-success bg-opacity-10 text-success p-3 rounded-circle mb-3 fs-4">
+                <i class="fa-solid fa-chart-line"></i>
+              </div>
+              <h5 class="text-white fw-bold">3. Transparent Scoring & AI</h5>
+              <p class="text-muted small">
+                Signals are normalized into an explainable 0–100 score. Our modular AI layer synthesizes actionable strengths, risk warnings, and balanced due-diligence recommendations.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: What We Check -->
+      <section class="py-5" id="features">
+        <div class="text-center mb-5">
+          <h2 class="text-white fw-bold">What We Inspect</h2>
+          <p class="text-muted">Over a dozen distinct authenticity and technical parameters evaluated in real-time.</p>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6 col-lg-4">
+            <div class="glass-card p-3 d-flex align-items-center gap-3">
+              <i class="fa-solid fa-lock text-info fs-3"></i>
+              <div>
+                <h6 class="text-white mb-0 fw-bold">SSL & HTTPS Security</h6>
+                <small class="text-muted">Cert validity, issuer & redirect enforcement</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="glass-card p-3 d-flex align-items-center gap-3">
+              <i class="fa-solid fa-id-card text-info fs-3"></i>
+              <div>
+                <h6 class="text-white mb-0 fw-bold">Corporate Identity</h6>
+                <small class="text-muted">Business name, branding & legal disclosures</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="glass-card p-3 d-flex align-items-center gap-3">
+              <i class="fa-solid fa-phone text-info fs-3"></i>
+              <div>
+                <h6 class="text-white mb-0 fw-bold">Contact Verification</h6>
+                <small class="text-muted">Operational emails, phones & addresses</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="glass-card p-3 d-flex align-items-center gap-3">
+              <i class="fa-solid fa-clock-rotate-left text-info fs-3"></i>
+              <div>
+                <h6 class="text-white mb-0 fw-bold">Public RDAP Domain Age</h6>
+                <small class="text-muted">Longevity, registration dates & registrar</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="glass-card p-3 d-flex align-items-center gap-3">
+              <i class="fa-solid fa-ghost text-info fs-3"></i>
+              <div>
+                <h6 class="text-white mb-0 fw-bold">Dummy Text Detection</h6>
+                <small class="text-muted">Lorem Ipsum, template text & John Doe</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="glass-card p-3 d-flex align-items-center gap-3">
+              <i class="fa-solid fa-cloud text-info fs-3"></i>
+              <div>
+                <h6 class="text-white mb-0 fw-bold">Hosting Infrastructure</h6>
+                <small class="text-muted">Vercel, Netlify, Cloudflare & AWS signals</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Scoring Methodology -->
+      <section class="py-5" id="scoring-info">
+        <div class="glass-card p-5">
+          <div class="row align-items-center g-4">
+            <div class="col-lg-6">
+              <h3 class="text-white fw-bold mb-3">Transparent Authenticity Scoring</h3>
+              <p class="text-muted">
+                Unlike arbitrary URL blocklists, WebVerify AI calculates a transparent, weighted score ranging from 0 to 100.
+                Every point added or deducted is tied directly to an explainable observation.
+              </p>
+              <div class="d-flex flex-column gap-2 mt-3">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge-classification badge-real py-1 px-3 small">75–100</span>
+                  <span class="text-white fw-bold">LIKELY REAL BUSINESS</span>
+                  <span class="text-muted small">— Coherent operational signals present</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge-classification badge-verify py-1 px-3 small">45–74</span>
+                  <span class="text-white fw-bold">NEEDS VERIFICATION</span>
+                  <span class="text-muted small">— Incomplete identity or new domain</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge-classification badge-demo py-1 px-3 small">0–44</span>
+                  <span class="text-white fw-bold">LIKELY DEMO / DUMMY</span>
+                  <span class="text-muted small">— Unfinished template or placeholder site</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="p-4 rounded bg-black bg-opacity-40 border border-primary border-opacity-25">
+                <h6 class="text-info fw-bold mb-3"><i class="fa-solid fa-scale-balanced me-2"></i>Scoring Weights Overview</h6>
+                <ul class="list-unstyled mb-0 small text-white-50">
+                  <li class="py-1 d-flex justify-content-between"><span>HTTPS & SSL Encryption</span><strong class="text-success">+15 max</strong></li>
+                  <li class="py-1 d-flex justify-content-between"><span>Business Branding & Identity</span><strong class="text-success">+15 max</strong></li>
+                  <li class="py-1 d-flex justify-content-between"><span>Contact Channels (Email, Phone, Address)</span><strong class="text-success">+15 max</strong></li>
+                  <li class="py-1 d-flex justify-content-between"><span>Domain Longevity & RDAP History</span><strong class="text-success">+15 max</strong></li>
+                  <li class="py-1 d-flex justify-content-between"><span>Content Substance & Services</span><strong class="text-success">+15 max</strong></li>
+                  <li class="py-1 d-flex justify-content-between"><span>Site Structure & Legal Policies</span><strong class="text-success">+15 max</strong></li>
+                  <li class="py-1 d-flex justify-content-between"><span>Social Footprint & Tech Consistency</span><strong class="text-success">+10 max</strong></li>
+                  <li class="py-1 d-flex justify-content-between text-danger"><span>Lorem Ipsum & Dummy Text Deductions</span><strong>Up to -20</strong></li>
+                  <li class="py-1 d-flex justify-content-between text-danger"><span>Broken Routes & Template Placeholders</span><strong>Up to -25</strong></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: FAQ -->
+      <section class="py-5" id="faq">
+        <div class="text-center mb-5">
+          <h2 class="text-white fw-bold">Frequently Asked Questions</h2>
+          <p class="text-muted">Clear, honest answers about authenticity detection.</p>
+        </div>
+
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <div class="accordion accordion-flush" id="faqAccordion">
+              
+              <div class="accordion-item bg-transparent border-bottom border-secondary border-opacity-25">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                    Does a website hosted on Vercel or Netlify mean it is fake?
+                  </button>
+                </h2>
+                <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                  <div class="accordion-body text-white-50 small">
+                    Absolutely not. Thousands of legitimate startups, SaaS companies, and digital agencies host their production web applications on Vercel, Netlify, and Cloudflare. We report hosting strictly as an informational technical signal.
+                  </div>
+                </div>
+              </div>
+
+              <div class="accordion-item bg-transparent border-bottom border-secondary border-opacity-25">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                    Does an SSL certificate (HTTPS) guarantee a business is real?
+                  </button>
+                </h2>
+                <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                  <div class="accordion-body text-white-50 small">
+                    No. Free automated SSL certificates (such as Let's Encrypt or Cloudflare SSL) can be obtained by anyone in seconds. HTTPS proves that network traffic is encrypted between your browser and the server, but does not prove the entity behind it is a real business.
+                  </div>
+                </div>
+              </div>
+
+              <div class="accordion-item bg-transparent border-bottom border-secondary border-opacity-25">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                    Can WebVerify AI prove 100% certainty?
+                  </button>
+                </h2>
+                <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                  <div class="accordion-body text-white-50 small">
+                    No automated tool can provide 100% certainty. WebVerify AI provides probabilistic authenticity indicators based on publicly accessible data, transparent heuristics, and AI synthesis to assist your due diligence.
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-top border-secondary border-opacity-25 py-4 mt-5 text-center text-muted small">
+    <div class="container">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+        <div class="d-flex align-items-center gap-2">
+          <i class="fa-solid fa-shield-halved text-info"></i>
+          <strong class="text-white">WebVerify AI</strong>
+          <span>— Website Authenticity Analyzer</span>
+        </div>
+        <div>
+          <span>Built for secure, explainable digital verification.</span>
+        </div>
+      </div>
+      <p class="mb-0 text-white-50">
+        Disclaimer: This analysis provides probabilistic indicators based on publicly accessible web data, not legal or financial proof of business legitimacy.
+      </p>
+    </div>
+  </footer>
+
+  <!-- Scan History Modal -->
+  <div class="modal fade" id="historyModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content glass-card border-secondary text-white">
+        <div class="modal-header border-secondary border-opacity-25">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-clock-rotate-left text-info me-2"></i> Scan History</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4" style="max-height: 60vh; overflow-y: auto;">
+          <div id="history-items-container">
+            <div class="text-center text-muted py-4">No scan history recorded yet.</div>
+          </div>
+        </div>
+        <div class="modal-footer border-secondary border-opacity-25 d-flex justify-content-between">
+          <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearAllHistory()">
+            <i class="fa-solid fa-trash me-1"></i> Clear History
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Application JS -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
