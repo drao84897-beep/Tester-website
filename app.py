@@ -35,6 +35,15 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/robots.txt")
+def robots():
+    """Allow search engines to crawl the public analyzer page only."""
+    return app.response_class(
+        "User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /report/\n",
+        mimetype="text/plain",
+    )
+
+
 @app.route("/report/<int:scan_id>")
 def view_report(scan_id):
     """Clean, standalone printable report page for PDF generation or export."""
