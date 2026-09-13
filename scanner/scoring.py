@@ -309,9 +309,22 @@ def calculate_authenticity_score(
         or dummy_email
         or dummy_phone
     )
+    strong_real_evidence = (
+        not explicit_dummy_evidence
+        and security_data.get("https_enabled")
+        and security_data.get("ssl_valid")
+        and bool(biz_name or homepage_data.get("title"))
+        and word_count >= 200
+        and (
+            has_email
+            or has_phone
+            or has_addr
+            or len(crawled_pages) >= 2
+        )
+    )
     if explicit_dummy_evidence:
         classification = "LIKELY DEMO / DUMMY"
-    elif final_score >= 75:
+    elif final_score >= 75 or strong_real_evidence:
         classification = "LIKELY REAL BUSINESS"
     else:
         classification = "NEEDS VERIFICATION"
@@ -324,4 +337,5 @@ def calculate_authenticity_score(
         "breakdown": breakdown,
         "dummy_evidence_found": explicit_dummy_evidence,
         "dummy_evidence_count": len(dummy_signals),
+        "strong_real_evidence": strong_real_evidence,
     }

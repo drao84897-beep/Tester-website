@@ -180,6 +180,34 @@ class TestScoringEngine(unittest.TestCase):
         self.assertLess(res["score"], 45)
         self.assertEqual(res["classification"], "LIKELY DEMO / DUMMY")
 
+    def test_low_score_without_dummy_evidence_needs_no_dummy_label(self):
+        sec = {"https_enabled": True, "ssl_valid": True, "http_to_https_redirect": False}
+        dom = {"age_days": 20, "age_formatted": "20 days", "is_platform_subdomain": False}
+        content = {
+            "word_count": 240,
+            "business_keywords_found": ["services"],
+            "dummy_severity": "LOW",
+            "dummy_signals": [],
+            "has_h1": True,
+        }
+        contacts = {
+            "business_name": "Example Services",
+            "is_placeholder_company": False,
+            "has_email": True,
+            "has_phone": False,
+            "has_address": False,
+            "is_placeholder_email": False,
+            "is_placeholder_phone": False,
+            "social_presence_count": 0,
+        }
+        tech = {"technologies": ["HTML5"], "hosting": "Vercel"}
+        links = {"broken_count": 0}
+        home = {"title": "Example Services", "internal_links": []}
+
+        res = calculate_authenticity_score(sec, dom, content, contacts, tech, links, {}, home)
+        self.assertNotEqual(res["classification"], "LIKELY DEMO / DUMMY")
+        self.assertTrue(res["strong_real_evidence"])
+
 
 class TestAIAnalysis(unittest.TestCase):
     """Tests for modular rule-based intelligence synthesizer."""
