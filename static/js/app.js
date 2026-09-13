@@ -374,7 +374,7 @@ async function loadHistoryItems() {
         </div>
         <div class="d-flex align-items-center gap-3">
           <div class="text-end">
-            <span class="badge ${item.score >= 75 ? 'badge-real' : (item.score >= 45 ? 'badge-verify' : 'badge-demo')}">${item.score}/100</span>
+            <span class="badge ${item.classification === 'LIKELY REAL BUSINESS' ? 'badge-real' : (item.classification === 'LIKELY DEMO / DUMMY' ? 'badge-demo' : 'badge-verify')}">${item.score}/100</span>
             <div class="small text-white-50" style="font-size: 0.75rem;">${item.classification}</div>
           </div>
           <button class="btn btn-outline-info btn-sm rounded-pill" onclick="viewHistoricalReport(${item.id})">
