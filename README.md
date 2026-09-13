@@ -162,6 +162,16 @@ The application will launch on:
 http://127.0.0.1:5000
 ```
 
+### 7. Deploy on Render
+
+The repository includes `render.yaml` and `Procfile` for deployment on Render:
+
+1. Connect the GitHub repository to Render.
+2. Choose **New > Blueprint**.
+3. Select this repository and deploy the detected `webverify-ai` service.
+
+Render supplies the `PORT` environment variable automatically, and the app listens on all interfaces for hosted traffic.
+
 ---
 
 ## Running the Automated Tests
