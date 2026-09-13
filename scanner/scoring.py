@@ -296,13 +296,20 @@ def calculate_authenticity_score(
     # Normalize strictly to 0-100
     final_score = max(0, min(100, round(score)))
 
-    # Classification boundaries
-    if final_score >= 75:
-        classification = "LIKELY REAL BUSINESS"
-    elif final_score >= 45:
-        classification = "NEEDS VERIFICATION"
-    else:
+    # A low score alone is not proof of a dummy website. Require direct
+    # template evidence before using the dummy classification.
+    explicit_dummy_evidence = (
+        content_data.get("dummy_severity") == "HIGH"
+        or is_dummy_company
+        or dummy_email
+        or dummy_phone
+    )
+    if explicit_dummy_evidence:
         classification = "LIKELY DEMO / DUMMY"
+    elif final_score >= 75:
+        classification = "LIKELY REAL BUSINESS"
+    else:
+        classification = "NEEDS VERIFICATION"
 
     return {
         "score": final_score,
@@ -310,4 +317,6 @@ def calculate_authenticity_score(
         "signals": signals,
         "warnings": warnings,
         "breakdown": breakdown,
+        "dummy_evidence_found": explicit_dummy_evidence,
+        "dummy_evidence_count": len(dummy_signals),
     }

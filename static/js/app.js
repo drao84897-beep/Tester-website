@@ -144,18 +144,19 @@ function renderResults(data) {
   scoreBar.style.strokeDashoffset = offset;
 
   // Set colors based on score
-  if (score >= 75) {
+  const classification = data.classification || "NEEDS VERIFICATION";
+  if (classification === "LIKELY REAL BUSINESS") {
     scoreBar.style.stroke = "#10b981";
     badge.className = "badge-classification badge-real";
-    badge.textContent = "LIKELY REAL BUSINESS";
-  } else if (score >= 45) {
-    scoreBar.style.stroke = "#f59e0b";
-    badge.className = "badge-classification badge-verify";
-    badge.textContent = "NEEDS VERIFICATION";
-  } else {
+    badge.textContent = "PROFESSIONAL WEBSITE";
+  } else if (classification === "LIKELY DEMO / DUMMY") {
     scoreBar.style.stroke = "#ef4444";
     badge.className = "badge-classification badge-demo";
-    badge.textContent = "LIKELY DEMO / DUMMY";
+    badge.textContent = "DUMMY / UNFINISHED WEBSITE";
+  } else {
+    scoreBar.style.stroke = "#f59e0b";
+    badge.className = "badge-classification badge-verify";
+    badge.textContent = "PARTIALLY PROFESSIONAL / VERIFY";
   }
 
   // Quick Summary Cards
@@ -185,8 +186,13 @@ function renderResults(data) {
 
   const verdictExplanation = document.getElementById("verdict-explanation");
   if (verdictExplanation) {
-    const verdictLabel = score >= 75 ? "Professional / likely real business" : (score >= 45 ? "Needs verification" : "Likely dummy / unfinished website");
-    verdictExplanation.textContent = `${verdictLabel}: ${ai.summary || "The result is based on the technical, domain, content, contact, and business signals found during the scan."}`;
+    const verdictLabel = classification === "LIKELY REAL BUSINESS" ? "Professional website" : (classification === "LIKELY DEMO / DUMMY" ? "Dummy or unfinished website" : "Partially professional, but verification required");
+    const reasons = [...(data.warnings || []), ...(data.signals || [])].slice(0, 6);
+    const reasonText = reasons.length > 0
+      ? reasons.map(reason => `- ${reason}`).join("\n")
+      : "- No detailed signals were returned by the scan.";
+    verdictExplanation.style.whiteSpace = "pre-line";
+    verdictExplanation.textContent = `${verdictLabel}\n${ai.summary || "The result is based on the technical, domain, content, contact, and business signals found during the scan."}\n\nWhy this result:\n${reasonText}`;
   }
 
   const strengthsList = document.getElementById("ai-strengths-list");
